@@ -38,7 +38,7 @@ public sealed partial class MainViewModel : ObservableObject
     private PackingNode? _selectedNode;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(LoadTaskCommand), nameof(ImportCodesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(LoadTaskCommand), nameof(ImportCodesCommand), nameof(LoadDemoDataCommand))]
     private bool _isBusy;
 
     [ObservableProperty]
@@ -122,10 +122,45 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
+        string[] lines;
+        try
+        {
+            lines = await File.ReadAllLinesAsync(path);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            _dialogs.ShowError("Codes could not be imported", ex.Message);
+            return;
+        }
+
+        await ImportLinesAsync(lines, Path.GetFileName(path));
+    }
+
+    /// <summary>
+    /// One click for a first look: takes the demo task (unless a task is already loaded) and packs a set of
+    /// generated codes, including a few codes of another product that the importer filters out.
+    /// </summary>
+    [RelayCommand(CanExecute = nameof(IsIdle))]
+    private async Task LoadDemoDataAsync()
+    {
+        if (Task is null)
+        {
+            await StartTaskAsync(PackagingTask.Demo, "Demo task");
+        }
+
+        if (Task is null)
+        {
+            return;
+        }
+
+        await ImportLinesAsync(GenerateSampleCodes(Task), "Demo codes");
+    }
+
+    private async Task ImportLinesAsync(IEnumerable<string> lines, string source)
+    {
         IsBusy = true;
         try
         {
-            var lines = await File.ReadAllLinesAsync(path);
             var report = CodeImporter.Import(lines, Task!.Gtin, new HashSet<string>(_codes, StringComparer.Ordinal));
 
             _codes.AddRange(report.Accepted);
@@ -133,7 +168,7 @@ public sealed partial class MainViewModel : ObservableObject
             await _repository.SaveAsync(result);
             ShowResult(result);
 
-            StatusMessage = $"{Path.GetFileName(path)}: {report.Summary}.";
+            StatusMessage = $"{source}: {report.Summary}.";
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidOperationException or Microsoft.Data.Sqlite.SqliteException)
         {
@@ -143,6 +178,14 @@ public sealed partial class MainViewModel : ObservableObject
         {
             IsBusy = false;
         }
+    }
+
+    /// <summary>Two full pallets, three more boxes and a few loose bottles, plus four codes of another product.</summary>
+    private static IEnumerable<string> GenerateSampleCodes(PackagingTask task)
+    {
+        var count = task.BottlesPerPallet * 2 + task.BoxFormat * 3 + 5;
+        return SampleCodes.Generate(task.Gtin, count, Random.Shared)
+            .Concat(SampleCodes.Generate(Gs1.WithCheckDigit("0460000000000"), 4, Random.Shared));
     }
 
     private bool CanImport() => HasTask && !IsBusy;
@@ -156,12 +199,9 @@ public sealed partial class MainViewModel : ObservableObject
             return;
         }
 
-        var count = Task.BottlesPerPallet * 2 + Task.BoxFormat * 3 + 5;
-        var lines = SampleCodes.Generate(Task.Gtin, count, Random.Shared)
-            .Concat(SampleCodes.Generate(Gs1.WithCheckDigit("0460000000000"), 4, Random.Shared));
-
+        var lines = GenerateSampleCodes(Task).ToList();
         await File.WriteAllLinesAsync(path, lines);
-        StatusMessage = $"Created {count:N0} sample codes (plus 4 for another product) in {path}";
+        StatusMessage = $"Created {lines.Count - 4:N0} sample codes (plus 4 for another product) in {path}";
     }
 
     [RelayCommand(CanExecute = nameof(HasLayout))]

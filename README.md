@@ -130,8 +130,9 @@ cd PackingSchemeBuilder
 dotnet run --project src/PackingSchemeBuilder
 ```
 
-**Quick tour without a marking server:** click *or use the demo task* → *Create a sample codes file* → *Import
-codes…* → *Export JSON*.
+**Quick tour without a marking server:** on the first start click **Fill with demo codes**. It takes the demo task
+and packs a set of generated codes in one step. To try the full flow, click *or use the demo task* → *Create a sample
+codes file* → *Import codes…* → *Export JSON*.
 
 ```bash
 dotnet test tests/PackingSchemeBuilder.Core.Tests   # runs on any OS

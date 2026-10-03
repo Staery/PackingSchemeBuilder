@@ -282,13 +282,31 @@
                         Visibility="{Binding HasLayout, Converter={StaticResource CollapsedWhen}}">
               <Path HorizontalAlignment="Center" Data="{StaticResource Icon.Pallet}" Fill="{StaticResource BorderStrongBrush}" Style="{StaticResource LargeIcon}" />
               <TextBlock Margin="0,10,0,4" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="No codes imported yet" />
-              <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Load a task, then import a file with unit codes." />
+              <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Load a task, then import a file with unit codes," />
+              <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="or try the app with generated demo codes." />
+              <Button Margin="0,16,0,0"
+                      HorizontalAlignment="Center"
+                      Command="{Binding LoadDemoDataCommand}"
+                      Style="{StaticResource PrimaryButton}">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,8,0" Data="{StaticResource Icon.Science}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Fill with demo codes" />
+                </StackPanel>
+              </Button>
             </StackPanel>
           </Grid>
         </Border>
 
         <!-- Details -->
         <Border Grid.Column="2" Style="{StaticResource Card}">
+          <Grid>
+          <StackPanel HorizontalAlignment="Center"
+                      VerticalAlignment="Center"
+                      Visibility="{Binding SelectedNode, Converter={StaticResource CollapsedWhen}}">
+            <Path HorizontalAlignment="Center" Data="{StaticResource Icon.Box}" Fill="{StaticResource BorderStrongBrush}" Style="{StaticResource LargeIcon}" />
+            <TextBlock Margin="0,10,0,4" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="Nothing selected" />
+            <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Select a pallet, box or bottle to see its codes." />
+          </StackPanel>
           <Grid DataContext="{Binding SelectedNode}" Visibility="{Binding Converter={StaticResource VisibleWhen}}">
             <Grid.RowDefinitions>
               <RowDefinition Height="Auto" />
@@ -372,6 +390,7 @@
                 </ItemsControl>
               </ScrollViewer>
             </DockPanel>
+          </Grid>
           </Grid>
         </Border>
       </Grid>

@@ -48,6 +48,39 @@ public sealed class MainViewModelTests : IDisposable
     }
 
     [Fact]
+    public async Task LoadDemoData_FromScratch_TakesDemoTaskAndPacksGeneratedCodes()
+    {
+        var vm = Create();
+        Assert.True(vm.LoadDemoDataCommand.CanExecute(null));
+
+        await vm.LoadDemoDataCommand.ExecuteAsync(null);
+
+        var task = PackagingTask.Demo;
+        var expected = task.BottlesPerPallet * 2 + task.BoxFormat * 3 + 5;
+        Assert.Equal(task, vm.Task);
+        Assert.Equal(expected, vm.Result!.BottleCount);
+        Assert.Equal(3, vm.Pallets.Count);
+        Assert.Same(vm.Pallets[0], vm.SelectedNode);
+        Assert.Equal(expected, _repository.Saved!.BottleCount);
+        Assert.StartsWith("Demo codes:", vm.StatusMessage);
+        Assert.Contains("4", vm.StatusMessage);
+    }
+
+    [Fact]
+    public async Task LoadDemoData_AddsToTheCurrentLayout()
+    {
+        var vm = Create();
+        await vm.UseDemoTaskCommand.ExecuteAsync(null);
+        _dialogs.OpenPath = WriteCodes(PackagingTask.Demo, 10);
+        await vm.ImportCodesCommand.ExecuteAsync(null);
+
+        await vm.LoadDemoDataCommand.ExecuteAsync(null);
+
+        var task = PackagingTask.Demo;
+        Assert.Equal(10 + task.BottlesPerPallet * 2 + task.BoxFormat * 3 + 5, vm.Result!.BottleCount);
+    }
+
+    [Fact]
     public async Task SecondImport_AppendsAndSkipsDuplicates()
     {
         var vm = Create();

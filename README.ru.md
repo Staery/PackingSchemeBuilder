@@ -131,8 +131,9 @@ cd PackingSchemeBuilder
 dotnet run --project src/PackingSchemeBuilder
 ```
 
-**Быстрое знакомство без сервера маркировки:** нажмите *or use the demo task* → *Create a sample codes file* →
-*Import codes…* → *Export JSON*.
+**Быстрое знакомство без сервера маркировки:** при первом запуске нажмите **Fill with demo codes**. Приложение
+возьмёт демо-задание и сразу разложит набор сгенерированных кодов. Чтобы пройти весь сценарий, нажмите *or use the demo
+task* → *Create a sample codes file* → *Import codes…* → *Export JSON*.
 
 ```bash
 dotnet test tests/PackingSchemeBuilder.Core.Tests   # работает на любой ОС
