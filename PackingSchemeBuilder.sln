@@ -1,9 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.7.34003.232
+VisualStudioVersion = 17.10.35201.131
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PackingSchemeBuilder", "PackingSchemeBuilder\PackingSchemeBuilder.csproj", "{D8376147-4D6C-4684-A77B-D2AC22983AB9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackingSchemeBuilder", "src\PackingSchemeBuilder\PackingSchemeBuilder.csproj", "{A4C2E6F8-1B3D-4E5F-9A7B-2C4D6E8F0A13}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{01FE4CFD-7B39-4020-A7FE-1914FA223E3E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackingSchemeBuilder.Core", "src\PackingSchemeBuilder.Core\PackingSchemeBuilder.Core.csproj", "{B5D3F7A9-2C4E-4F60-8B8C-3D5E7F9A1B24}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{29E4F6B5-5BF9-4E13-B0B3-19D0EDE26C16}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PackingSchemeBuilder.Core.Tests", "tests\PackingSchemeBuilder.Core.Tests\PackingSchemeBuilder.Core.Tests.csproj", "{C6E4A8B0-3D5F-4071-9C9D-4E6F8A0B2C35}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7A3C1E52-6C0B-4E1C-9F57-2B7E0F7D3A41}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		Directory.Build.props = Directory.Build.props
+		global.json = global.json
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,15 +27,25 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D8376147-4D6C-4684-A77B-D2AC22983AB9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8376147-4D6C-4684-A77B-D2AC22983AB9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8376147-4D6C-4684-A77B-D2AC22983AB9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D8376147-4D6C-4684-A77B-D2AC22983AB9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A4C2E6F8-1B3D-4E5F-9A7B-2C4D6E8F0A13}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A4C2E6F8-1B3D-4E5F-9A7B-2C4D6E8F0A13}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A4C2E6F8-1B3D-4E5F-9A7B-2C4D6E8F0A13}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A4C2E6F8-1B3D-4E5F-9A7B-2C4D6E8F0A13}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B5D3F7A9-2C4E-4F60-8B8C-3D5E7F9A1B24}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B5D3F7A9-2C4E-4F60-8B8C-3D5E7F9A1B24}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B5D3F7A9-2C4E-4F60-8B8C-3D5E7F9A1B24}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B5D3F7A9-2C4E-4F60-8B8C-3D5E7F9A1B24}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6E4A8B0-3D5F-4071-9C9D-4E6F8A0B2C35}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6E4A8B0-3D5F-4071-9C9D-4E6F8A0B2C35}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6E4A8B0-3D5F-4071-9C9D-4E6F8A0B2C35}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6E4A8B0-3D5F-4071-9C9D-4E6F8A0B2C35}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {F25F3B4D-480A-4A88-9845-658927989430}
+	GlobalSection(NestedProjects) = preSolution
+		{A4C2E6F8-1B3D-4E5F-9A7B-2C4D6E8F0A13} = {01FE4CFD-7B39-4020-A7FE-1914FA223E3E}
+		{B5D3F7A9-2C4E-4F60-8B8C-3D5E7F9A1B24} = {01FE4CFD-7B39-4020-A7FE-1914FA223E3E}
+		{C6E4A8B0-3D5F-4071-9C9D-4E6F8A0B2C35} = {29E4F6B5-5BF9-4E13-B0B3-19D0EDE26C16}
 	EndGlobalSection
 EndGlobal
