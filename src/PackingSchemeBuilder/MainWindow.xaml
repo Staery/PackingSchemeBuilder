@@ -1,0 +1,393 @@
+<Window x:Class="PackingSchemeBuilder.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="clr-namespace:PackingSchemeBuilder.Core.ViewModels;assembly=PackingSchemeBuilder.Core"
+        mc:Ignorable="d"
+        d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Title="Packing Scheme Builder — GS1 aggregation"
+        Width="1320"
+        Height="820"
+        MinWidth="1060"
+        MinHeight="640"
+        Icon="Assets/app.ico"
+        WindowStartupLocation="CenterScreen"
+        Background="{StaticResource AppBackgroundBrush}"
+        FontFamily="{StaticResource UiFont}"
+        TextOptions.TextFormattingMode="Display"
+        UseLayoutRounding="True">
+
+  <Window.InputBindings>
+    <KeyBinding Command="{Binding ImportCodesCommand}" Gesture="Ctrl+O" />
+    <KeyBinding Command="{Binding ExportCommand}" Gesture="Ctrl+E" />
+  </Window.InputBindings>
+
+  <Window.Resources>
+    <Style x:Key="Card" TargetType="Border">
+      <Setter Property="Background" Value="{StaticResource CardBrush}" />
+      <Setter Property="BorderBrush" Value="{StaticResource DividerBrush}" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="CornerRadius" Value="12" />
+      <Setter Property="Padding" Value="16,14" />
+    </Style>
+    <Style x:Key="StatValue" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="22" />
+      <Setter Property="FontWeight" Value="SemiBold" />
+      <Setter Property="Foreground" Value="{StaticResource TextBrush}" />
+      <Setter Property="Margin" Value="0,4,0,2" />
+    </Style>
+    <Style x:Key="TaskLabel" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11" />
+      <Setter Property="Foreground" Value="{StaticResource SidebarMutedBrush}" />
+    </Style>
+    <Style x:Key="TaskValue" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="13" />
+      <Setter Property="Foreground" Value="White" />
+      <Setter Property="Margin" Value="0,1,0,8" />
+      <Setter Property="TextWrapping" Value="Wrap" />
+    </Style>
+
+    <!-- Kind badge and completeness dot shared by the tree and the details panel -->
+    <DataTemplate x:Key="KindIcon" DataType="{x:Type vm:PackingNode}">
+      <Border x:Name="Chip" Width="26" Height="26" Background="{StaticResource AccentSoftBrush}" CornerRadius="7">
+        <Path x:Name="Glyph" Data="{StaticResource Icon.Pallet}" Fill="{StaticResource AccentBrush}" Style="{StaticResource Icon}" />
+      </Border>
+      <DataTemplate.Triggers>
+        <DataTrigger Binding="{Binding Kind}" Value="Box">
+          <Setter TargetName="Glyph" Property="Data" Value="{StaticResource Icon.Box}" />
+          <Setter TargetName="Chip" Property="Background" Value="{StaticResource DraftSoftBrush}" />
+          <Setter TargetName="Glyph" Property="Fill" Value="{StaticResource DraftBrush}" />
+        </DataTrigger>
+        <DataTrigger Binding="{Binding Kind}" Value="Bottle">
+          <Setter TargetName="Glyph" Property="Data" Value="{StaticResource Icon.Bottle}" />
+          <Setter TargetName="Chip" Property="Background" Value="{StaticResource PublishedSoftBrush}" />
+          <Setter TargetName="Glyph" Property="Fill" Value="{StaticResource PublishedBrush}" />
+        </DataTrigger>
+      </DataTemplate.Triggers>
+    </DataTemplate>
+  </Window.Resources>
+
+  <Grid>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="300" />
+      <ColumnDefinition Width="*" />
+    </Grid.ColumnDefinitions>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+
+    <!-- ============================== Sidebar ============================== -->
+    <Border Grid.RowSpan="2" Background="{StaticResource SidebarBrush}">
+      <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <StackPanel Margin="16,20,16,16">
+          <StackPanel Margin="4,0,0,22" Orientation="Horizontal">
+            <Image Width="38" Height="38" Source="Assets/logo.png" />
+            <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+              <TextBlock FontSize="17" FontWeight="SemiBold" Foreground="White" Text="Packing Scheme" />
+              <TextBlock FontSize="12" Foreground="{StaticResource SidebarMutedBrush}" Text="GS1 aggregation builder" />
+            </StackPanel>
+          </StackPanel>
+
+          <!-- Task -->
+          <TextBlock Style="{StaticResource SidebarHeader}" Text="PACKAGING TASK" />
+          <Border Style="{StaticResource SidebarSection}">
+            <StackPanel>
+              <TextBlock Margin="0,0,0,4" Style="{StaticResource TaskLabel}" Text="Marking server" />
+              <TextBox Margin="0,0,0,10" Style="{StaticResource SidebarInputBox}" Text="{Binding ApiBaseUrl, UpdateSourceTrigger=PropertyChanged}" />
+              <Button Command="{Binding LoadTaskCommand}" Style="{StaticResource SidebarButton}" ToolTip="GET client/api/get/task/">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,10,0" Data="{StaticResource Icon.Server}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Load current task" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,10,0,0"
+                      HorizontalAlignment="Center"
+                      Command="{Binding UseDemoTaskCommand}"
+                      Content="or use the demo task"
+                      Style="{StaticResource SidebarLinkButton}" />
+            </StackPanel>
+          </Border>
+
+          <Border Style="{StaticResource SidebarSection}" Visibility="{Binding HasTask, Converter={StaticResource VisibleWhen}}">
+            <StackPanel>
+              <TextBlock Style="{StaticResource TaskLabel}" Text="Product" />
+              <TextBlock FontWeight="SemiBold" Style="{StaticResource TaskValue}" Text="{Binding Task.ProductName}" />
+              <TextBlock Style="{StaticResource TaskLabel}" Text="GTIN" />
+              <TextBlock FontFamily="{StaticResource CodeFont}" Style="{StaticResource TaskValue}" Text="{Binding Task.Gtin}" />
+              <UniformGrid Columns="3">
+                <StackPanel>
+                  <TextBlock Style="{StaticResource TaskLabel}" Text="Volume" />
+                  <TextBlock Style="{StaticResource TaskValue}" Text="{Binding Task.Volume, StringFormat='{}{0} L'}" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Style="{StaticResource TaskLabel}" Text="Per box" />
+                  <TextBlock Style="{StaticResource TaskValue}" Text="{Binding Task.BoxFormat}" />
+                </StackPanel>
+                <StackPanel>
+                  <TextBlock Style="{StaticResource TaskLabel}" Text="Per pallet" />
+                  <TextBlock Style="{StaticResource TaskValue}" Text="{Binding Task.PalletFormat}" />
+                </StackPanel>
+              </UniformGrid>
+              <TextBlock FontSize="11" Foreground="{StaticResource SidebarMutedBrush}" Text="{Binding TaskSource}" />
+            </StackPanel>
+          </Border>
+
+          <!-- Codes -->
+          <TextBlock Style="{StaticResource SidebarHeader}" Text="UNIT CODES" />
+          <Border Style="{StaticResource SidebarSection}">
+            <StackPanel>
+              <Button HorizontalAlignment="Stretch" Command="{Binding ImportCodesCommand}" Style="{StaticResource PrimaryButton}" ToolTip="Import a text file with one DataMatrix code per line (Ctrl+O)">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,8,0" Data="{StaticResource Icon.Download}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Import codes…" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,10,0,0"
+                      HorizontalAlignment="Center"
+                      Command="{Binding CreateSampleFileCommand}"
+                      Content="Create a sample codes file"
+                      Style="{StaticResource SidebarLinkButton}" />
+            </StackPanel>
+          </Border>
+
+          <!-- Output -->
+          <TextBlock Style="{StaticResource SidebarHeader}" Text="LAYOUT MAP" />
+          <Border Style="{StaticResource SidebarSection}">
+            <StackPanel>
+              <Button Command="{Binding ExportCommand}" Style="{StaticResource SidebarButton}" ToolTip="Save the layout map as JSON (Ctrl+E)">
+                <StackPanel Orientation="Horizontal">
+                  <Path Margin="0,0,10,0" Data="{StaticResource Icon.Json}" Style="{StaticResource Icon}" />
+                  <TextBlock Text="Export JSON" />
+                </StackPanel>
+              </Button>
+              <Button Margin="0,10,0,0"
+                      HorizontalAlignment="Center"
+                      Command="{Binding ClearCommand}"
+                      Content="Clear layout"
+                      Style="{StaticResource SidebarLinkButton}" />
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+    </Border>
+
+    <!-- ============================== Content ============================== -->
+    <Grid Grid.Column="1" Margin="24,20,24,16">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="Auto" />
+        <RowDefinition Height="*" />
+      </Grid.RowDefinitions>
+
+      <StackPanel Margin="0,0,0,16">
+        <TextBlock Style="{StaticResource PageTitle}" Text="Packing layout" />
+        <TextBlock Style="{StaticResource MutedText}" Text="Bottles are aggregated into boxes and boxes onto pallets in the order they were scanned" />
+      </StackPanel>
+
+      <UniformGrid Grid.Row="1" Margin="0,0,0,12" Columns="4">
+        <Border Margin="0,0,6,0" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="BOTTLES" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding Result.BottleCount, StringFormat=N0, FallbackValue=0}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="unit codes packed" />
+          </StackPanel>
+        </Border>
+        <Border Margin="6,0" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="BOXES" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding Result.BoxCount, StringFormat=N0, FallbackValue=0}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="{Binding Result.FullBoxCount, StringFormat='{}{0:N0} full', FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Margin="6,0" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="PALLETS" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding Result.PalletCount, StringFormat=N0, FallbackValue=0}" />
+            <TextBlock Style="{StaticResource MutedText}" Text="{Binding Result.FullPalletCount, StringFormat='{}{0:N0} full', FallbackValue=''}" />
+          </StackPanel>
+        </Border>
+        <Border Margin="6,0,0,0" Style="{StaticResource Card}">
+          <StackPanel>
+            <TextBlock Style="{StaticResource FieldLabel}" Text="FULL PALLET" />
+            <TextBlock Style="{StaticResource StatValue}" Text="{Binding Task.BottlesPerPallet, StringFormat=N0, FallbackValue=—}" />
+            <TextBlock Style="{StaticResource MutedText}">
+              <Run Text="{Binding Task.PalletFormat, Mode=OneWay, FallbackValue=0}" />
+              <Run Text="boxes ×" />
+              <Run Text="{Binding Task.BoxFormat, Mode=OneWay, FallbackValue=0}" />
+              <Run Text="bottles" />
+            </TextBlock>
+          </StackPanel>
+        </Border>
+      </UniformGrid>
+
+      <Grid Grid.Row="2">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="5*" />
+          <ColumnDefinition Width="12" />
+          <ColumnDefinition Width="6*" />
+        </Grid.ColumnDefinitions>
+
+        <!-- Tree -->
+        <Border Padding="8" Style="{StaticResource Card}">
+          <Grid>
+            <TreeView x:Name="Tree"
+                      Background="Transparent"
+                      BorderThickness="0"
+                      FocusVisualStyle="{x:Null}"
+                      FontSize="13"
+                      ItemsSource="{Binding Pallets}"
+                      SelectedItemChanged="OnTreeSelectionChanged"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling">
+              <TreeView.Resources>
+                <!-- Soft accent selection instead of the system highlight colour. -->
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}" Color="#EEF2FF" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.HighlightTextBrushKey}" Color="#111827" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}" Color="#F3F4F6" />
+                <SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightTextBrushKey}" Color="#111827" />
+              </TreeView.Resources>
+              <TreeView.ItemContainerStyle>
+                <Style TargetType="TreeViewItem">
+                  <Setter Property="Padding" Value="6,3" />
+                  <Setter Property="Margin" Value="0,1" />
+                  <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+                </Style>
+              </TreeView.ItemContainerStyle>
+              <TreeView.ItemTemplate>
+                <HierarchicalDataTemplate DataType="{x:Type vm:PackingNode}" ItemsSource="{Binding Children}">
+                  <StackPanel Orientation="Horizontal">
+                    <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource KindIcon}" />
+                    <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                      <TextBlock FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Title}" />
+                      <TextBlock FontSize="12" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Details}" />
+                    </StackPanel>
+                    <Ellipse x:Name="Dot" Width="7" Height="7" Margin="10,0,0,0" VerticalAlignment="Center" Fill="{StaticResource PublishedBrush}" />
+                  </StackPanel>
+                  <HierarchicalDataTemplate.Triggers>
+                    <DataTrigger Binding="{Binding IsComplete}" Value="False">
+                      <Setter TargetName="Dot" Property="Fill" Value="{StaticResource WarningBrush}" />
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding Kind}" Value="Bottle">
+                      <Setter TargetName="Dot" Property="Visibility" Value="Collapsed" />
+                    </DataTrigger>
+                  </HierarchicalDataTemplate.Triggers>
+                </HierarchicalDataTemplate>
+              </TreeView.ItemTemplate>
+            </TreeView>
+
+            <StackPanel HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        Visibility="{Binding HasLayout, Converter={StaticResource CollapsedWhen}}">
+              <Path HorizontalAlignment="Center" Data="{StaticResource Icon.Pallet}" Fill="{StaticResource BorderStrongBrush}" Style="{StaticResource LargeIcon}" />
+              <TextBlock Margin="0,10,0,4" HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource SecondaryTextBrush}" Text="No codes imported yet" />
+              <TextBlock HorizontalAlignment="Center" Style="{StaticResource MutedText}" Text="Load a task, then import a file with unit codes." />
+            </StackPanel>
+          </Grid>
+        </Border>
+
+        <!-- Details -->
+        <Border Grid.Column="2" Style="{StaticResource Card}">
+          <Grid DataContext="{Binding SelectedNode}" Visibility="{Binding Converter={StaticResource VisibleWhen}}">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="Auto" />
+              <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <DockPanel Margin="0,0,0,14">
+              <ContentPresenter Content="{Binding}" ContentTemplate="{StaticResource KindIcon}" />
+              <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                <TextBlock FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Title}" />
+                <TextBlock Style="{StaticResource MutedText}" Text="{Binding Details}" />
+              </StackPanel>
+            </DockPanel>
+
+            <TextBlock Grid.Row="1" Style="{StaticResource FieldLabel}" Text="CODE" />
+            <StackPanel Grid.Row="2" Margin="0,0,0,14">
+              <TextBox Margin="0,0,0,8"
+                       FontFamily="{StaticResource CodeFont}"
+                       FontSize="12.5"
+                       IsReadOnly="True"
+                       Style="{StaticResource InputBox}"
+                       Text="{Binding Code, Mode=OneWay}" />
+              <ItemsControl ItemsSource="{Binding CodeParts}">
+                <ItemsControl.ItemsPanel>
+                  <ItemsPanelTemplate>
+                    <WrapPanel />
+                  </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border Margin="0,0,8,6" Padding="8,4" Background="{StaticResource SurfaceBrush}" BorderBrush="{StaticResource DividerBrush}" BorderThickness="1" CornerRadius="6">
+                      <StackPanel>
+                        <TextBlock FontSize="10.5" Foreground="{StaticResource MutedTextBrush}">
+                          <Run FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" Text="{Binding Ai, Mode=OneWay, StringFormat='({0})'}" />
+                          <Run Text="{Binding Name, Mode=OneWay}" />
+                        </TextBlock>
+                        <TextBlock FontFamily="{StaticResource CodeFont}" FontSize="12.5" Foreground="{StaticResource TextBrush}" Text="{Binding Value}" />
+                      </StackPanel>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+
+            <!-- Contents overview: boxes on a pallet or bottles in a box -->
+            <DockPanel Grid.Row="3" Visibility="{Binding Children.Count, Converter={StaticResource VisibleWhen}}">
+              <TextBlock DockPanel.Dock="Top" Style="{StaticResource FieldLabel}" Text="CONTENTS" />
+              <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding Children}">
+                  <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                      <WrapPanel />
+                    </ItemsPanelTemplate>
+                  </ItemsControl.ItemsPanel>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate DataType="{x:Type vm:PackingNode}">
+                      <Border x:Name="Cell"
+                              Width="58"
+                              Height="52"
+                              Margin="0,0,8,8"
+                              Background="{StaticResource PublishedSoftBrush}"
+                              BorderBrush="{StaticResource PublishedBrush}"
+                              BorderThickness="0,0,0,3"
+                              CornerRadius="6"
+                              ToolTip="{Binding Code}">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                          <TextBlock HorizontalAlignment="Center" FontSize="10.5" Foreground="{StaticResource MutedTextBrush}" Text="{Binding Title}" />
+                          <TextBlock HorizontalAlignment="Center" FontWeight="SemiBold" Foreground="{StaticResource TextBrush}" Text="{Binding Badge}" />
+                        </StackPanel>
+                      </Border>
+                      <DataTemplate.Triggers>
+                        <DataTrigger Binding="{Binding IsComplete}" Value="False">
+                          <Setter TargetName="Cell" Property="Background" Value="{StaticResource DraftSoftBrush}" />
+                          <Setter TargetName="Cell" Property="BorderBrush" Value="{StaticResource WarningBrush}" />
+                        </DataTrigger>
+                      </DataTemplate.Triggers>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </DockPanel>
+          </Grid>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <!-- Status bar -->
+    <Border Grid.Row="1"
+            Grid.Column="1"
+            Padding="16,6"
+            Background="{StaticResource CardBrush}"
+            BorderBrush="{StaticResource DividerBrush}"
+            BorderThickness="0,1,0,0">
+      <DockPanel>
+        <TextBlock DockPanel.Dock="Right" Style="{StaticResource MutedText}" Text="Ctrl+O import  ·  Ctrl+E export JSON" />
+        <TextBlock Margin="0,0,16,0" Style="{StaticResource MutedText}" Text="{Binding StatusMessage}" />
+      </DockPanel>
+    </Border>
+  </Grid>
+</Window>
